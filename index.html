@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小五中文科學習遊戲</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;background:linear-gradient(170deg,#d0ecff,#e8dcff 60%,#ffe4f0);color:#33365e;min-height:100vh}
+#app{max-width:900px;margin:0 auto;padding:14px 14px 60px}
+.screen{display:none;animation:fade .25s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.tb-btn{background:#fff;border:2px solid #d8ccff;border-radius:14px;padding:8px 14px;font-size:.95rem;cursor:pointer;color:#33365e;font-family:inherit;font-weight:700}
+.tb-btn:hover{background:#f1ebff}
+.tb-title{font-size:1rem;font-weight:800;text-align:center;flex:1}
+.scoreline{display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.score{background:#fff;border-radius:14px;padding:8px 18px;font-weight:800;border:2px solid #d8ccff}
+.score.p0{border-color:#4d96ff}
+.score.p1{border-color:#ff8fab}
+.hero{background:linear-gradient(120deg,#ff6b35,#ffb703);color:#fff;border-radius:24px;padding:26px 22px;margin-bottom:18px;box-shadow:0 8px 24px rgba(255,107,53,.25)}
+.hero h1{font-size:1.8rem;margin-bottom:6px}
+.hero p{opacity:.93;font-size:1rem;line-height:1.7}
+.modes{display:flex;gap:12px;margin:14px 0}
+.mode-btn{flex:1;background:#fff;border:3px solid #d8ccff;border-radius:18px;padding:16px;text-align:center;font-size:1.2rem;font-weight:800;cursor:pointer;font-family:inherit}
+.mode-btn.sel{border-color:#ff6b35;background:#fff3ed;box-shadow:0 4px 12px rgba(255,107,53,.2)}
+.mode-btn small{display:block;font-size:.8rem;color:#7a7fae;font-weight:600;margin-top:4px}
+.name-row{display:flex;gap:12px;margin-bottom:14px}
+.name-box{flex:1}
+.name-box label{font-weight:700;font-size:.9rem;display:block;margin-bottom:4px}
+.name-box input{width:100%;padding:10px;border:2px solid #d8ccff;border-radius:12px;font-size:1.05rem;font-family:inherit;background:#fff}
+.unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.unit-card{background:#fff;border-radius:22px;padding:18px;cursor:pointer;border:3px solid transparent;box-shadow:0 6px 18px rgba(90,90,160,.12);transition:.15s}
+.unit-card:hover{transform:translateY(-3px)}
+.unit-card .u-num{font-size:.85rem;font-weight:800;color:#fff;display:inline-block;padding:3px 12px;border-radius:999px;margin-bottom:8px}
+.unit-card h3{font-size:1.22rem;margin-bottom:4px}
+.unit-card .u-tag{color:#7a7fae;font-size:.88rem;margin-bottom:12px;line-height:1.5}
+.ustars{font-size:1.25rem;letter-spacing:3px}
+.ustars .off{color:#e3e0f5}
+.uc1{border-color:#ffd1de}.uc1 .u-num{background:#ff8fab}
+.uc2{border-color:#b8f0e4}.uc2 .u-num{background:#06d6a0}
+.uc3{border-color:#ffe3a8}.uc3 .u-num{background:#ffb703}
+.uc4{border-color:#c3ddff}.uc4 .u-num{background:#4d96ff}
+.uc5{border-color:#dcc9ff}.uc5 .u-num{background:#9b5de5}
+.uc6{border-color:#b5e6f0}.uc6 .u-num{background:#00b4d8}
+.ucm{border-color:#e3ccff}.ucm .u-num{background:#845ef7}
+.btn{display:inline-block;border:none;border-radius:16px;padding:14px 26px;font-size:1.12rem;font-weight:800;cursor:pointer;color:#fff;font-family:inherit;transition:.15s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.btn-primary{background:linear-gradient(120deg,#ff6b35,#ffb703)}
+.btn-gold{background:linear-gradient(120deg,#ffb703,#ff8c42)}
+.btn-ghost{background:#fff;color:#33365e;border:2px solid #d8ccff}
+.btn-green{background:#06d6a0}
+.btn-red{background:#ef476f}
+.btn:disabled{opacity:.6;cursor:default;transform:none}
+.card{background:#fff;border-radius:22px;padding:22px;box-shadow:0 6px 18px rgba(90,90,160,.12);margin-bottom:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.qcount{font-weight:800;color:#7a7fae;font-size:1rem}
+.qtags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.78rem;font-weight:800;padding:4px 12px;border-radius:999px;background:#f1ebff;color:#6c5ce7}
+.tag.t2{background:#fff3d6;color:#b07d00}
+.tag.t3{background:#e9fbf7;color:#0b7d6f}
+.qtext{font-size:1.32rem;line-height:1.75;font-weight:700;margin:6px 0 16px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#fff;border:3px solid #ddd6ff;border-radius:16px;padding:13px 16px;margin:9px 0;font-size:1.12rem;cursor:pointer;font-family:inherit;color:#33365e;transition:.12s}
+.opt:hover{border-color:#ff6b35;transform:translateY(-1px)}
+.opt .ltag{background:#eeeaff;color:#6c5ce7;font-weight:900;min-width:34px;text-align:center;border-radius:10px;padding:4px 0;font-size:1rem;flex-shrink:0}
+.opt.correct{border-color:#06d6a0;background:#e9fbf7}
+.opt.correct .ltag{background:#06d6a0;color:#fff}
+.opt.wrong{border-color:#ef476f;background:#ffe9ef}
+.opt.wrong .ltag{background:#ef476f;color:#fff}
+.opt:disabled{cursor:default}
+.fb{display:none;margin-top:16px;border-radius:16px;padding:14px 16px;font-size:1.03rem;line-height:1.75;font-weight:600}
+.fb.show{display:block;animation:fade .2s}
+.fb.ok{background:#e9fbf7;border:2px solid #06d6a0;color:#0b6e62}
+.fb.bad{background:#ffe9ef;border:2px solid #ef476f;color:#a0244a}
+.fb .fb-title{font-weight:900;font-size:1.15rem;margin-bottom:4px}
+.next-row{margin-top:14px;text-align:right}
+.blank{display:inline-block;min-width:110px;text-align:center;border-bottom:3px solid #ff6b35;font-weight:900;color:#ff6b35;margin:0 4px}
+.blank.cur{background:#fff3d6;border-radius:8px;border-bottom:3px solid #ff8c42;color:#ff8c42}
+.heart{color:#ef476f;font-size:1.25rem}
+.turnbar{background:#fff;border-radius:16px;padding:10px 16px;margin-bottom:12px;font-weight:900;font-size:1.1rem;display:flex;justify-content:space-between;align-items:center;border:3px solid #d8ccff}
+.turnbar.p0{border-color:#4d96ff;background:#e8f2ff}
+.turnbar.p1{border-color:#ff8fab;background:#fff0f4}
+.round-banner{background:#ff6b35;color:#fff;border-radius:16px;padding:12px 18px;font-weight:900;font-size:1.15rem;margin-bottom:12px;text-align:center}
+.flash{min-height:230px;display:flex;flex-direction:column;justify-content:center}
+.flash .f-t{font-size:1.45rem;font-weight:900;margin-bottom:10px}
+.flash .f-d{font-size:1.13rem;line-height:1.9}
+.fnav{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+.fnav .fcount{font-weight:800;color:#7a7fae}
+.mcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcol-title{font-weight:800;margin-bottom:8px;color:#7a7fae;font-size:.95rem;text-align:center}
+.mitem{border:3px solid #ddd6ff;background:#fff;border-radius:16px;padding:12px 10px;text-align:center;font-size:1rem;font-weight:700;cursor:pointer;line-height:1.5;margin:6px 0;font-family:inherit;color:#33365e;transition:.12s}
+.mitem:hover{border-color:#ff6b35}
+.mitem.sel{border-color:#ff8c42;background:#fff3d6}
+.mitem.done{border-color:#06d6a0;background:#e9fbf7;cursor:default}
+.mitem.shake{animation:shake .4s}
+.oitem{border:3px solid #ddd6ff;background:#fff;border-radius:16px;padding:14px;font-size:1.1rem;font-weight:700;cursor:pointer;margin:9px 0;text-align:center;font-family:inherit;color:#33365e}
+.oitem.done{border-color:#06d6a0;background:#e9fbf7;cursor:default}
+.oitem .num{display:inline-block;background:#06d6a0;color:#fff;border-radius:50%;width:30px;height:30px;line-height:30px;margin-right:8px;font-weight:900}
+.oitem.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.result-hero{text-align:center;padding:26px 16px}
+.bigscore{font-size:3.2rem;font-weight:900;margin:6px 0}
+.rstars{font-size:2.6rem;letter-spacing:8px;margin:14px 0}
+.rstars .got{color:#ffb703}
+.rstars .no{color:#e3e0f5}
+.rmsg{font-size:1.25rem;font-weight:800;margin:8px 0}
+.rsub{color:#7a7fae;font-weight:700;line-height:1.7}
+.rbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.star-table{width:100%;border-collapse:collapse}
+.star-table th,.star-table td{border-bottom:2px solid #eeeaff;padding:12px;text-align:center;font-size:1rem}
+.star-table th{color:#7a7fae}
+.star-table .ttl{font-weight:900;font-size:1.1rem}
+.reward{background:#fff7e0;border:2px solid #ffd76b;border-radius:16px;padding:12px 16px;margin-top:14px;line-height:1.9;font-weight:700}
+.overlay{position:fixed;inset:0;background:rgba(40,40,80,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.obox{background:#fff;border-radius:24px;padding:26px;text-align:center;max-width:420px;width:100%}
+.obox h2{margin-bottom:8px}
+.obox p{color:#7a7fae;font-weight:700;margin-bottom:16px;line-height:1.7}
+.conf{position:fixed;top:-20px;z-index:200;border-radius:3px;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
+.hint{background:#f1ebff;border-radius:14px;padding:10px 14px;color:#6c5ce7;font-weight:700;margin-top:10px;font-size:.95rem;line-height:1.6}
+.footer-note{margin-top:20px;color:#7a7fae;font-size:.88rem;line-height:1.8;text-align:center}
+.small-btn{background:none;border:none;color:#7a7fae;text-decoration:underline;cursor:pointer;font-family:inherit;font-size:.9rem}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#fff;border-radius:24px;padding:40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:360px;width:90%">
+    <div style="font-size:3rem;margin-bottom:10px">🔒</div>
+    <h2 style="margin-bottom:8px;color:#33365e">請輸入密碼</h2>
+    <p style="color:#7a7fae;margin-bottom:20px;font-size:.9rem">請向家長索取密碼</p>
+    <input type="password" id="pwdInput" placeholder="密碼" style="width:100%;padding:14px;border:3px solid #ddd6ff;border-radius:14px;font-size:1.2rem;text-align:center;font-family:inherit;margin-bottom:14px;box-sizing:border-box">
+    <div id="pwdErr" style="color:#ef476f;font-weight:700;margin-bottom:10px;display:none">密碼不正確，請再試一次</div>
+    <button id="pwdBtn" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(120deg,#9b5de5,#ff8fab);color:#fff;font-size:1.1rem;font-weight:800;cursor:pointer;font-family:inherit">確認</button>
+  </div>
+</div>
+<div id="app" style="display:none">
+<div class="topbar">
+  <button class="tb-btn" id="backBtn" onclick="goHome()">&#8592; 主頁</button>
+  <div class="tb-title" id="tbTitle">小五中文科學習遊戲</div>
+  <button class="tb-btn" id="soundBtn" onclick="toggleSound()">聲音：開</button>
+</div>
+<div id="scoreline" class="scoreline"></div>
+
+<div id="screen-home" class="screen">
+  <div class="hero">
+    <h1>小五中文科學習遊戲</h1>
+    <p>呈分試必備 &#9733; 六個單元 + 模擬小測<br>重點加強標點符號認知，鞏固中文基礎知識。</p>
+  </div>
+  <div class="card">
+    <div class="modes">
+      <div class="mode-btn" id="modeSingle" onclick="setMode('single')">單人模式<small>自己挑戰，收集星星</small></div>
+      <div class="mode-btn" id="modeTwo" onclick="setMode('two')">親子對戰<small>家長與孩子輪流出戰</small></div>
+    </div>
+    <div class="name-row" id="nameRow">
+      <div class="name-box"><label>玩家一（家長）</label><input id="name1" value="爸爸" oninput="saveNames()"></div>
+      <div class="name-box"><label>玩家二（孩子）</label><input id="name2" value="孩子" oninput="saveNames()"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-weight:800">星星總數：<span id="totalStars" style="color:#ff8c42;font-size:1.3rem">0</span> / 9</span>
+      <button class="btn btn-gold" style="padding:10px 18px;font-size:1rem" onclick="showStars()">星星總成績表</button>
+      <button class="small-btn" onclick="resetAll()">重設全部進度</button>
+    </div>
+  </div>
+  <div class="unit-grid" id="unitGrid"></div>
+  <div class="footer-note">玩法：先看「溫習小錦囊」，再答題。答錯時會顯示解說，溫故知新！<br>每完成一單元獲 1 顆星；模擬小測按分數換星。</div>
+</div>
+
+<div id="screen-review" class="screen">
+  <div class="round-banner">溫習小錦囊（先讀一讀，再出戰！）</div>
+  <div class="card flash" id="flashCard"></div>
+  <div class="fnav">
+    <button class="btn btn-ghost" onclick="revNav(-1)">上一張</button>
+    <span class="fcount" id="revCount">1 / 1</span>
+    <button class="btn btn-ghost" onclick="revNav(1)">下一張</button>
+  </div>
+  <div class="next-row"><button class="btn btn-primary" onclick="startRounds()">開始答題！</button></div>
+</div>
+
+<div id="screen-quiz" class="screen"></div>
+<div id="screen-match" class="screen"></div>
+<div id="screen-order" class="screen"></div>
+
+<div id="screen-result" class="screen">
+  <div class="card result-hero" id="resultBox"></div>
+</div>
+
+<div id="screen-stars" class="screen">
+  <div class="card">
+    <h2 style="margin-bottom:14px">星星總成績表</h2>
+    <table class="star-table" id="starTable"></table>
+    <div class="reward" id="rewardBox"></div>
+    <div class="next-row"><button class="btn btn-primary" onclick="goHome()">返回主頁</button></div>
+  </div>
+</div>
+</div>
+
+<script>
+var DATA={
+u1:{
+id:'u1',num:'第一單元',title:'標點符號（上）',tag:'句號、逗號、問號、驚嘆號',cls:'uc1',
+review:[
+{t:'句號（。）',d:'用於陳述句的結尾，表示一句話說完了。例如：今天天氣很好。'},
+{t:'逗號（，）',d:'用於句子中間，表示停頓。較短的停頓用頓號（、），較長的停頓用逗號。例如：我喜歡吃蘋果、香蕉和橙。'},
+{t:'問號（？）',d:'用於疑問句的結尾，表示提問。例如：你今天吃了甚麼？'},
+{t:'驚嘆號（！）',d:'用於感嘆句或強調語氣的句子結尾。例如：這朵花真漂亮！'},
+{t:'頓號（、）',d:'用於並列的詞語之間，表示較短的停頓。例如：桌子上有書、筆、尺和橡皮擦。'}
+],
+questions:[
+{type:'mc',q:'「你今天上學了嗎」這句話應該用甚麼標點符號結尾？',opts:['。','？','！','，'],ans:1,explain:'這是一個疑問句，應該用問號（？）結尾。'},
+{type:'mc',q:'「公園裏有花、草和樹木」中的「、」有甚麼作用？',opts:['表示句子結束','表示提問','表示並列詞語之間的停頓','表示感嘆'],ans:2,explain:'頓號（、）用於並列的詞語之間，表示較短的停頓。'},
+{type:'tf',q:'「今天是我的生日」這句話的標點符號使用正確。',ans:true,explain:'這是一個陳述句，用句號（。）結尾是正確的。'},
+{type:'tf',q:'「你吃飯了嗎！」這句話的標點符號使用正確。',ans:false,explain:'這是一個疑問句，應該用問號（？），不是驚嘆號（！）。'},
+{type:'mc',q:'「哇！這本書太好看了」中的「！」表示甚麼？',opts:['句子結束','提問','驚訝或強調的語氣','停頓'],ans:2,explain:'驚嘆號（！）用於感嘆句或強調語氣的句子。'},
+{type:'fill',q:'陳述句的結尾應該用（　　）號。',ans:'句',explain:'陳述句用句號（。）結尾，表示一句話說完了。'},
+{type:'mc',q:'以下哪個句子的標點符號使用正確？',opts:['「你去哪裏。」','「我喜歡吃蘋果。」','「他是誰！」','「快跑。」'],ans:1,explain:'「我喜歡吃蘋果」是陳述句，用句號正確。其他句子標點使用不當。'},
+{type:'mc',q:'「樹上有鳥、蟲和蝴蝶」中的標點符號作用是？',opts:['表示驚嘆','表示句子結束','表示並列事物之間的停頓','表示疑問'],ans:2,explain:'頓號（、）用於並列詞語之間，如鳥、蟲、蝴蝶是並列的。'}
+]},
+u2:{
+id:'u2',num:'第二單元',title:'標點符號（下）',tag:'引號、省略號、冒號、書名號',cls:'uc2',
+review:[
+{t:'引號（「」）',d:'用於引用別人說的話或強調特定詞語。例如：老師說：「今天要交功課。」'},
+{t:'省略號（……）',d:'表示省略或語氣未盡。例如：桌子上有蘋果、香蕉、橙……'},
+{t:'冒號（：）',d:'用於提示下文或總結上文。例如：他有三樣愛好：跑步、游泳和畫畫。'},
+{t:'書名號（《》）',d:'用於書名、報刊名、歌曲名等。例如：我最近在看《西遊記》。'},
+{t:'分號（；）',d:'用於並列的分句之間。例如：春天開花；夏天結果。'}
+],
+questions:[
+{type:'mc',q:'「老師說：「今天要交功課。」」中的「「」」有甚麼作用？',opts:['表示停頓','表示引用別人說的話','表示書名','表示省略'],ans:1,explain:'引號（「」）用於引用別人說的話。'},
+{type:'mc',q:'「我最喜歡的書是《紅樓夢》」中的「《》」用於？',opts:['引用對話','標示書名','表示省略','表示停頓'],ans:1,explain:'書名號（《》）用於書名、報刊名等。'},
+{type:'tf',q:'「我今天去了公園、圖書館、超市……」中的省略號使用正確。',ans:true,explain:'省略號可以用來表示還有很多類似的事物，這裡使用正確。'},
+{type:'tf',q:'「他說我最喜歡吃蘋果」這句話用了引號。',ans:false,explain:'這句話沒有引用別人說的話，不需要引號。如果要表示他說的話，應該寫成：他說：「我最喜歡吃蘋果。」'},
+{type:'mc',q:'「他有三樣愛好：跑步、游泳和畫畫」中的冒號作用是？',opts:['表示驚嘆','提示下文的內容','表示句子結束','表示引用'],ans:1,explain:'冒號（：）用於提示下文，這裡提示了三樣愛好的內容。'},
+{type:'fill',q:'引用別人說的話時，要用（　　）號。',ans:'引',explain:'引號（「」）用於引用別人說的話。'},
+{type:'mc',q:'以下哪個書名號的使用是正確的？',opts:['「我喜歡看「西遊記」」','「我喜歡看《西遊記》」','「我喜歡看〈西遊記〉」','「我喜歡看西遊記」'],ans:1,explain:'書名號的正確寫法是《》，用於書名、報刊名等。'},
+{type:'mc',q:'「春天開花；夏天結果」中的分號作用是？',opts:['表示停頓','表示並列的分句之間的停頓','表示驚嘆','表示引用'],ans:1,explain:'分號（；）用於並列的分句之間，表示較長的停頓。'}
+]},
+u3:{
+id:'u3',num:'第三單元',title:'成語運用',tag:'常用成語、成語故事、成語造句',cls:'uc3',
+review:[
+{t:'甚麼是成語',d:'成語是中文裡固定的詞組，通常由四個字組成，背後往往有歷史故事或典故。'},
+{t:'守株待兔',d:'比喻不勞而獲或死守經驗不知變通。故事：農夫見兔子撞死在樹樁上，從此不再耕田，每天守在樹旁等兔子。'},
+{t:'畫蛇添足',d:'比喻做多餘的事，反而弄巧成拙。故事：畫蛇比賽中，最先畫好的人多畫了腳，反而輸了。'},
+{t:'亡羊補牢',d:'比喻出了問題後及時補救，還來得及。故事：羊走失後才修補羊圈，防止再失去更多羊。'},
+{t:'葉公好龍',d:'比喻表面上喜歡某事物，實際上並不真正喜歡。故事：葉公宣稱喜歡龍，但真龍來了卻嚇得逃跑。'}
+],
+questions:[
+{type:'mc',q:'「守株待兔」這個成語比喻甚麼？',opts:['勤勞工作','不勞而獲或死守經驗','勇敢面對困難','團結合作'],ans:1,explain:'守株待兔比喻不勞而獲或死守經驗不知變通。'},
+{type:'mc',q:'「畫蛇添足」的意思是？',opts:['畫得很好','做多餘的事反而弄巧成拙','畫得很像','做事認真'],ans:1,explain:'畫蛇添足比喻做多餘的事，反而弄巧成拙。'},
+{type:'tf',q:'「亡羊補牢」比喻出了問題後及時補救，還來得及。',ans:true,explain:'亡羊補牢比喻出了問題後及時補救，防止損失擴大。'},
+{type:'tf',q:'「葉公好龍」比喻一個人真的很喜歡龍。',ans:false,explain:'葉公好龍比喻表面上喜歡某事物，實際上並不真正喜歡。'},
+{type:'mc',q:'「小明考試前不溫習，考試時才後悔，這可以用哪個成語形容？」',opts:['守株待兔','亡羊補牢','畫蛇添足','葉公好龍'],ans:1,explain:'亡羊補牢比喻出了問題後及時補救，還來得及。小明考試後才後悔，應該事前做好準備。'},
+{type:'fill',q:'「（　　）」比喻做多餘的事，反而弄巧成拙。',ans:'畫蛇添足',explain:'畫蛇添足比喻做多餘的事，反而弄巧成拙。'},
+{type:'mc',q:'以下哪個成語是用來形容「不勞而獲」的？',opts:['畫蛇添足','亡羊補牢','守株待兔','葉公好龍'],ans:2,explain:'守株待兔比喻不勞而獲或死守經驗不知變通。'},
+{type:'mc',q:'「小華平時不努力，考試時才想突擊，結果不及格。這可以用哪個成語來勸告他？」',opts:['畫蛇添足','亡羊補牢','守株待兔','葉公好龍'],ans:1,explain:'亡羊補牢比喻出了問題後及時補救，還來得及。勸告小華下次要提前溫習。'}
+]},
+u4:{
+id:'u4',num:'第四單元',title:'近義詞與反義詞',tag:'詞義辨析、詞語配對',cls:'uc4',
+review:[
+{t:'甚麼是近義詞',d:'意思相近或相似的詞語。例如：高興—快樂、美麗—漂亮、開始—開始。'},
+{t:'甚麼是反義詞',d:'意思相反的詞語。例如：高—矮、大—小、快—慢、黑—白。'},
+{t:'辨析詞義',d:'有些近義詞意思相近但用法不同。例如：「發明」指創造新事物，「發現」指找到已存在的事物。'},
+{t:'詞語搭配',d:'有些詞語有固定的搭配。例如：「發揮」作用、「實現」夢想、「提高」水平。'},
+{t:'多義詞',d:'一個詞可能有多個意思。例如：「深」可以指深度（水很深），也可以指程度（感情很深）。'}
+],
+questions:[
+{type:'mc',q:'「高興」的近義詞是？',opts:['難過','悲傷','快樂','生氣'],ans:2,explain:'高興和快樂意思相近，都是表示心情愉快。'},
+{type:'mc',q:'「大」的反義詞是？',opts:['多','高','長','小'],ans:3,explain:'大和小是反義詞，表示體積或規模相反。'},
+{type:'tf',q:'「發明」和「發現」意思完全相同。',ans:false,explain:'「發明」指創造新事物，「發現」指找到已存在的事物，意思不同。'},
+{type:'tf',q:'「美麗」和「漂亮」是近義詞。',ans:true,explain:'美麗和漂亮都表示好看的意思，是近義詞。'},
+{type:'mc',q:'「實現夢想」中的「實現」可以換成？',opts:['完成','做到','達成','以上都可以'],ans:3,explain:'實現、完成、做到、達成都可以用來表示夢想成真，但「實現」是最常用的搭配。'},
+{type:'fill',q:'「提高」的近義詞是（　　）。',ans:'增強',explain:'提高和增強意思相近，都表示使某事物變強或變多。'},
+{type:'mc',q:'以下哪組是反義詞？',opts:['高興—快樂','開始—結束','美麗—漂亮','快—速'],ans:1,explain:'開始和結束是反義詞，表示動作的起點和終點相反。'},
+{type:'mc',q:'「深」在「水很深」和「感情很深」中的意思？',opts:['完全相同','不相同','都是指深度','都是指程度'],ans:1,explain:'「深」在「水很深」指深度，在「感情很深」指程度，意思不相同。'}
+]},
+u5:{
+id:'u5',num:'第五單元',title:'修辭手法',tag:'比喻、排比、擬人、反問',cls:'uc5',
+review:[
+{t:'比喻',d:'用具體的事物來形容抽象的事物。例如：月亮像一個大圓盤。有明喻（用「像」）和暗喻（用「是」）。'},
+{t:'排比',d:'用三個或以上結構相似的句子或詞語，增強語氣。例如：愛是陽光，愛是雨露，愛是溫暖。'},
+{t:'擬人',d:'把事物當作人來描寫，賦予人的特徵。例如：小鳥在枝頭唱歌。'},
+{t:'反問',d:'用問句的形式來表達肯定的意思，不需要回答。例如：這本書不是很有趣嗎？（意思是這本書很有趣。）'},
+{t:'誇張',d:'故意誇大或縮小事物的特徵。例如：他跑得比風還快。'}
+],
+questions:[
+{type:'mc',q:'「月亮像一個大圓盤」用了甚麼修辭手法？',opts:['排比','擬人','比喻','反問'],ans:2,explain:'用「像」來形容月亮，是明喻的比喻手法。'},
+{type:'mc',q:'「愛是陽光，愛是雨露，愛是溫暖」用了甚麼修辭手法？',opts:['比喻','擬人','誇張','排比'],ans:3,explain:'用三個結構相似的句子「愛是……」來增強語氣，是排比手法。'},
+{type:'tf',q:'「小鳥在枝頭唱歌」用了擬人的修辭手法。',ans:true,explain:'把小鳥當作人來描寫，賦予它「唱歌」的行為，是擬人手法。'},
+{type:'tf',q:'「這本書不是很有趣嗎」是一個反問句。',ans:true,explain:'用問句形式表達肯定意思（這本書很有趣），不需要回答，是反問手法。'},
+{type:'mc',q:'「他跑得比風還快」用了甚麼修辭手法？',opts:['比喻','擬人','誇張','排比'],ans:2,explain:'故意誇大他跑步的速度，是誇張手法。'},
+{type:'fill',q:'用三個或以上結構相似的句子來增強語氣，叫做（　　）。',ans:'排比',explain:'排比是用三個或以上結構相似的句子或詞語，增強語氣。'},
+{type:'mc',q:'「春風輕輕地撫摸著大地」用了甚麼修辭手法？',opts:['比喻','擬人','反問','誇張'],ans:1,explain:'把春風當作人來描寫，賦予它「撫摸」的行為，是擬人手法。'},
+{type:'mc',q:'「他的聲音大得連十公里外都聽得到」用了甚麼修辭手法？',opts:['比喻','擬人','排比','誇張'],ans:3,explain:'故意誇大聲音的大小，是誇張手法。'}
+]},
+u6:{
+id:'u6',num:'第六單元',title:'閱讀理解與寫作',tag:'段落大意、中心思想、寫作技巧',cls:'uc6',
+review:[
+{t:'找出中心句',d:'每段文字通常有一個中心句，概括了整段的意思。通常在段落的開頭或結尾。'},
+{t:'段落大意',d:'用自己的話簡潔地說出每段的主要內容。注意找出關鍵詞和關鍵句。'},
+{t:'中心思想',d:'整篇文章想表達的主要意思或主題。通常在文章的開頭或結尾揭示。'},
+{t:'寫作結構',d:'常見的寫作結構：起承轉合。「起」引入話題、「承」展開敘述、「轉」轉換角度、「合」總結全文。'},
+{t:'記敘文六要素',d:'時間、地點、人物、事件的起因、經過、結果。寫記敘文時要把六要素交代清楚。'}
+],
+questions:[
+{type:'mc',q:'一篇文章的「中心思想」是指甚麼？',opts:['文章的第一句話','文章的標題','文章想表達的主要意思','文章的作者'],ans:2,explain:'中心思想是整篇文章想表達的主要意思或主題。'},
+{type:'mc',q:'「起承轉合」中的「轉」是指甚麼？',opts:['引入話題','展開敘述','轉換角度或話題','總結全文'],ans:2,explain:'「轉」是指轉換角度或話題，使文章更有變化。'},
+{type:'tf',q:'記敘文的六要素包括時間、地點、人物、事件的起因、經過和結果。',ans:true,explain:'這六要素是記敘文的基本要素，缺一不可。'},
+{type:'tf',q:'每段文字的中心句一定在段落的開頭。',ans:false,explain:'中心句通常在段落的開頭或結尾，但並不一定在開頭。'},
+{type:'mc',q:'「小明今天去了公園，他看到了美麗的花，還聽到了小鳥的歌聲」這段話的中心句最可能是？',opts:['小明今天去了公園','他看到了美麗的花','還聽到了小鳥的歌聲','以上都是'],ans:0,explain:'「小明今天去了公園」是整段話的中心句，其他句子是補充說明。'},
+{type:'fill',q:'寫作結構「起承轉合」中，「起」的作用是（　　）話題。',ans:'引入',explain:'「起」是引入話題，為文章開個頭。'},
+{type:'mc',q:'閱讀理解時，找出「關鍵詞」有甚麼好處？',opts:['讓文章更長','幫助理解段落大意','讓文章更難懂','沒有特別好處'],ans:1,explain:'找出關鍵詞可以幫助我們快速理解段落的主要內容。'},
+{type:'mc',q:'以下哪個不是記敘文的六要素之一？',opts:['時間','地點','顏色','人物'],ans:2,explain:'記敘文六要素是時間、地點、人物、事件的起因、經過、結果，不包括顏色。'}
+]},
+quiz:{id:'quiz',num:'模擬小測',title:'中文小測驗',tag:'綜合六個單元',cls:'ucm',questions:[]}
+};
+
+var S={mode:'single',cur:null,rq:[],ri:0,pts:[0,0],turn:0,stars:{},sound:true,names:['爸爸','孩子']};
+var LS_KEY='cn5_v1';
+function loadProgress(){try{var d=localStorage.getItem(LS_KEY);if(d)S.stars=JSON.parse(d)}catch(e){}}
+function saveProgress(){try{localStorage.setItem(LS_KEY,JSON.stringify(S.stars))}catch(e){}}
+function totalStars(){var t=0;for(var k in S.stars)t+=S.stars[k];return t}
+
+var audioCtx;
+function beep(f,d,t){if(!S.sound)return;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.value=0.15;g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d/1000);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d/1000)}catch(e){}}
+function sndCorrect(){beep(523,100);setTimeout(function(){beep(659,100)},100)}
+function sndWrong(){beep(220,300,'sawtooth')}
+function sndWin(){beep(523,120);setTimeout(function(){beep(659,120)},130);setTimeout(function(){beep(784,200)},260)}
+
+function toggleSound(){S.sound=!S.sound;document.getElementById('soundBtn').textContent='聲音：'+(S.sound?'開':'關')}
+
+function confetti(){var c=['#ff8fab','#06d6a0','#4d96ff','#ffb703','#9b5de5','#ff8c42'];for(var i=0;i<40;i++){var e=document.createElement('div');e.className='conf';e.style.cssText='left:'+Math.random()*100+'vw;background:'+c[i%c.length]+';width:'+(6+Math.random()*6)+'px;height:'+(6+Math.random()*6)+'px;animation-duration:'+(1.5+Math.random()*2)+'s;animation-delay:'+(Math.random()*0.5)+'s';document.body.appendChild(e);setTimeout(function(el){el.remove()},4000,e)}}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});var el=document.getElementById('screen-'+id);if(el)el.classList.add('active')}
+
+function goHome(){
+  S.cur=null;S.rq=[];S.ri=0;S.pts=[0,0];S.turn=0;
+  showScreen('home');renderHome();updateScoreline()}
+
+function setMode(m){
+  S.mode=m;
+  document.getElementById('modeSingle').classList.toggle('sel',m==='single');
+  document.getElementById('modeTwo').classList.toggle('sel',m==='two');
+  document.getElementById('nameRow').style.display=m==='two'?'flex':'none';
+  saveNames();
+}
+function saveNames(){
+  S.names[0]=document.getElementById('name1').value||'爸爸';
+  S.names[1]=document.getElementById('name2').value||'孩子';
+}
+
+function renderHome(){
+  var g=document.getElementById('unitGrid');var h='';
+  var keys=['u1','u2','u3','u4','u5','u6','quiz'];
+  keys.forEach(function(k){
+    var u=DATA[k];
+    var got=S.stars[k]||0;
+    var max=u.id==='quiz'?3:1;
+    var st='';for(var i=0;i<max;i++)st+='<span class="'+(i<got?'got':'off')+'">★</span>';
+    h+='<div class="unit-card '+u.cls+'" onclick="enterUnit(\''+k+'\')">';
+    h+='<div class="u-num">'+u.num+'</div>';
+    h+='<h3>'+u.title+'</h3>';
+    h+='<div class="u-tag">'+u.tag+'</div>';
+    h+='<div class="ustars">'+st+'</div>';
+    h+='</div>';
+  });
+  g.innerHTML=h;
+  document.getElementById('totalStars').textContent=totalStars();
+}
+
+function enterUnit(k){
+  S.cur=k;
+  if(k==='quiz'){
+    var pool=[];
+    ['u1','u2','u3','u4','u5','u6'].forEach(function(uk){
+      DATA[uk].questions.forEach(function(q){pool.push(q)});
+    });
+    shuffle(pool);
+    DATA.quiz.questions=pool.slice(0,20);
+  }
+  showReview();
+}
+
+var revIdx=0;
+function showReview(){
+  revIdx=0;showScreen('review');renderFlash();
+}
+function renderFlash(){
+  var u=DATA[S.cur];var r=u.review;
+  var c=document.getElementById('flashCard');
+  c.innerHTML='<div class="f-t">'+r[revIdx].t+'</div><div class="f-d">'+r[revIdx].d+'</div>';
+  document.getElementById('revCount').textContent=(revIdx+1)+' / '+r.length;
+}
+function revNav(d){
+  var u=DATA[S.cur];var r=u.review;
+  revIdx=Math.max(0,Math.min(r.length-1,revIdx+d));
+  renderFlash();
+}
+
+function startRounds(){
+  var u=DATA[S.cur];
+  S.rq=u.questions.slice();shuffle(S.rq);
+  S.ri=0;S.pts=[0,0];S.turn=0;
+  showScreen('quiz');renderQ();
+}
+
+function renderQ(){
+  if(S.ri>=S.rq.length){showResult();return}
+  var q=S.rq[S.ri];
+  var sc=document.getElementById('screen-quiz');
+  var h='';
+  if(S.mode==='two'){
+    h+='<div class="turnbar p'+S.turn+'">'+S.names[S.turn]+' 的回合</div>';
+  }
+  h+='<div class="card">';
+  h+='<div class="qhead"><span class="qcount">第 '+(S.ri+1)+' / '+S.rq.length+' 題</span>';
+  h+='<div class="qtags"><span class="tag">'+typeLabel(q.type)+'</span></div></div>';
+  h+='<div class="qtext">'+esc(q.q)+'</div>';
+
+  if(q.type==='mc'){
+    var letters='ABCD';
+    q.opts.forEach(function(o,i){
+      h+='<button class="opt" data-i="'+i+'" onclick="ansMC(this,'+i+','+q.ans+')"><span class="ltag">'+letters[i]+'</span><span>'+esc(o)+'</span></button>';
+    });
+  } else if(q.type==='tf'){
+    h+='<button class="opt" data-v="true" onclick="ansTF(this,true,'+q.ans+')"><span class="ltag">✓</span><span>對</span></button>';
+    h+='<button class="opt" data-v="false" onclick="ansTF(this,false,'+q.ans+')"><span class="ltag">✗</span><span>錯</span></button>';
+  } else if(q.type==='fill'){
+    h+='<div style="margin:10px 0"><input id="fillInput" type="text" placeholder="輸入答案..." style="width:100%;padding:12px;border:3px solid #ddd6ff;border-radius:12px;font-size:1.1rem;font-family:inherit"></div>';
+    h+='<button class="btn btn-primary" onclick="ansFill()">確認</button>';
+  }
+
+  h+='<div class="fb" id="feedback"></div>';
+  h+='<div class="next-row" id="nextRow" style="display:none"><button class="btn btn-primary" onclick="nextQ()">下一題 &#8594;</button></div>';
+  h+='</div>';
+  sc.innerHTML=h;
+  if(q.type==='fill'){setTimeout(function(){var inp=document.getElementById('fillInput');if(inp)inp.focus()},100)}
+}
+
+function ansMC(el,idx,ans){
+  if(el.classList.contains('correct')||el.classList.contains('wrong'))return;
+  document.querySelectorAll('.opt').forEach(function(o){o.disabled=true});
+  var correct=idx===ans;
+  if(correct){el.classList.add('correct');S.pts[S.turn]++;sndCorrect()}else{
+    el.classList.add('wrong');sndWrong();
+    document.querySelectorAll('.opt')[ans].classList.add('correct');
+  }
+  showFB(correct,S.rq[S.ri].explain);
+}
+
+function ansTF(el,val,ans){
+  if(el.classList.contains('correct')||el.classList.contains('wrong'))return;
+  document.querySelectorAll('.opt').forEach(function(o){o.disabled=true});
+  var correct=val===ans;
+  if(correct){el.classList.add('correct');S.pts[S.turn]++;sndCorrect()}else{
+    el.classList.add('wrong');sndWrong();
+    document.querySelectorAll('.opt').forEach(function(o){if((o.dataset.v==='true')===(ans===true))o.classList.add('correct')});
+  }
+  showFB(correct,S.rq[S.ri].explain);
+}
+
+function ansFill(){
+  var inp=document.getElementById('fillInput');if(!inp)return;
+  var val=inp.value.trim();
+  if(!val)return;
+  var q=S.rq[S.ri];
+  var correct=val===q.ans;
+  inp.disabled=true;
+  if(correct){inp.style.borderColor='#06d6a0';S.pts[S.turn]++;sndCorrect()}
+  else{inp.style.borderColor='#ef476f';sndWrong()}
+  showFB(correct,(correct?'':'正確答案：'+q.ans+'。')+q.explain);
+}
+
+function showFB(ok,txt){
+  var fb=document.getElementById('feedback');
+  fb.className='fb show '+(ok?'ok':'bad');
+  fb.innerHTML='<div class="fb-title">'+(ok?'✓ 答對了！':'✗ 答錯了')+'</div>'+txt;
+  document.getElementById('nextRow').style.display='';
+}
+
+function nextQ(){
+  S.ri++;
+  if(S.mode==='two')S.turn=1-S.turn;
+  updateScoreline();
+  renderQ();
+}
+
+function updateScoreline(){
+  var sl=document.getElementById('scoreline');
+  if(S.mode==='two'&&S.rq.length>0){
+    sl.innerHTML='<div class="score p0">'+S.names[0]+': '+S.pts[0]+'</div><div class="score p1">'+S.names[1]+': '+S.pts[1]+'</div>';
+  }else{sl.innerHTML=''}
+}
+
+function showResult(){
+  showScreen('result');sndWin();confetti();
+  var u=DATA[S.cur];var total=S.rq.length;
+  var score=S.mode==='two'?Math.max(S.pts[0],S.pts[1]):S.pts[0];
+  var pct=Math.round(score/total*100);
+  var stars=pct>=90?3:pct>=70?2:pct>=50?1:0;
+
+  if(S.cur==='quiz'){
+    var prev=S.stars.quiz||0;
+    if(stars>prev)S.stars.quiz=stars;
+  }else{
+    S.stars[S.cur]=1;
+  }
+  saveProgress();
+
+  var starH='';for(var i=0;i<3;i++)starH+='<span class="'+(i<stars?'got':'no')+'">★</span>';
+  var msg=stars===3?'太棒了！完美表現！🎉':stars===2?'做得很好！繼續努力！👏':stars===1?'不錯！再試一次可以更好！💪':'別灰心，多練習就會進步！💪';
+
+  var h='<h2>'+u.title+' — 完成！</h2>';
+  h+='<div class="bigscore">'+score+' / '+total+'</div>';
+  h+='<div class="rstars">'+starH+'</div>';
+  h+='<div class="rmsg">'+msg+'</div>';
+  h+='<div class="rsub">正確率：'+pct+'%'+(S.mode==='two'?'<br>'+S.names[0]+': '+S.pts[0]+' 分 | '+S.names[1]+': '+S.pts[1]+' 分':'')+'</div>';
+  h+='<div class="rbtns">';
+  h+='<button class="btn btn-primary" onclick="goHome()">返回主頁</button>';
+  h+='<button class="btn btn-ghost" onclick="enterUnit(\''+S.cur+'\')">再挑戰一次</button>';
+  h+='</div>';
+  document.getElementById('resultBox').innerHTML=h;
+}
+
+function showStars(){
+  showScreen('stars');
+  var keys=['u1','u2','u3','u4','u5','u6','quiz'];
+  var h='<tr><th>單元</th><th>星星</th><th>狀態</th></tr>';
+  var total=0;
+  keys.forEach(function(k){
+    var u=DATA[k];var got=S.stars[k]||0;var max=k==='quiz'?3:1;
+    total+=got;
+    var st='';for(var i=0;i<max;i++)st+='<span class="'+(i<got?'got':'no')+'">★</span>';
+    h+='<tr><td>'+u.title+'</td><td>'+st+'</td><td>'+(got>=max?'已完成':'未完成')+'</td></tr>';
+  });
+  document.getElementById('starTable').innerHTML=h;
+  var reward=total>=9?'🏆 全部完成！你是中文小天才！':total>=6?'🌟 很棒！快要全部完成了！':total>=3?'👍 不錯的成績！繼續加油！':'💪 多練習，你會越來越好的！';
+  document.getElementById('rewardBox').innerHTML='星星總數：'+total+' / 9<br>'+reward;
+}
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function typeLabel(t){return{mc:'選擇題',tf:'是非題',fill:'填充題'}[t]||t}
+function resetAll(){if(confirm('確定要重設所有進度嗎？')){S.stars={};saveProgress();renderHome();totalStars()}}
+
+loadProgress();setMode('single');renderHome();showScreen('home');
+</script>
+<script>
+(function(){
+  var PWD='yau';
+  var ls=document.getElementById('lockScreen');
+  var app=document.getElementById('app');
+  var inp=document.getElementById('pwdInput');
+  var btn=document.getElementById('pwdBtn');
+  var err=document.getElementById('pwdErr');
+  function unlock(){
+    var v=inp.value.trim();
+    if(v===PWD){
+      ls.style.display='none';
+      app.style.display='';
+    }else{
+      err.style.display='';
+      inp.value='';
+      inp.focus();
+    }
+  }
+  btn.addEventListener('click',unlock);
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')unlock()});
+  inp.focus();
+})();
+</script>
+</body>
+</html>
